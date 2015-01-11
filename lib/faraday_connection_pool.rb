@@ -36,7 +36,7 @@ module FaradayConnectionPool
       end
 
       def with_net_http_connection(env)
-        get_connection_from_pool(env).with do |connection|
+        connection_pool_for(env).with do |connection|
           yield connection
          end
       end
@@ -48,7 +48,7 @@ module FaradayConnectionPool
       end
 
       private
-      def get_connection_from_pool(env)
+      def connection_pool_for(env)
         self.class.synchronize do
           @@connection_pools[pool_key(env)] ||=
             ConnectionPool.new(:size => FaradayConnectionPool.configuration.size,
