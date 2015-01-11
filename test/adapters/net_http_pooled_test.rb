@@ -37,11 +37,11 @@ module Adapters
         connection = double('connection')
         pool = ConnectionPool.new { connection }
         allow(ConnectionPool).to receive(:new).and_return(pool)
-        response = double('response', :code => 200, :body => "body", :each_header => true)
+        response = double('response', :code => 200, :body => :ok, :each_header => true)
 
         expect(connection).to receive(:get).and_return(response)
 
-        create_connection.get '/echo'
+        assert_equal :ok, create_connection.get('/echo').body
       end
 
       def test_connection_pools_reused
