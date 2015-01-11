@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+faraday_path=`bundle show faraday`
+$faraday_path/script/proxy-server "$@"

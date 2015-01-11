@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Faraday has nice integrations tests built in, so we tap into them here.
+faraday_path=`bundle show faraday`
+$faraday_path/script/test $@
+pkill -f "faraday-0.9.1/script/server"
+pkill -f "faraday-0.9.1/script/proxy-server"
