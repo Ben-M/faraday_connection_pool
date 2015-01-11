@@ -1,11 +1,12 @@
 faraday_gem_location = Gem.loaded_specs['faraday'].gem_dir
 integration_location = File.join(faraday_gem_location, 'test', 'adapters', 'integration')
 require integration_location
+require 'minitest/rspec_mocks'
 require_relative('../../lib/faraday_connection_pool')
-require 'mocha/mini_test'
 
 module Adapters
   class NetHttpPooledTest < Faraday::TestCase
+    include MiniTest::RSpecMocks
 
     def adapter() :net_http_pooled end
 
@@ -18,7 +19,6 @@ module Adapters
         FaradayConnectionPool::Adapter::NetHttpPooled.purge_connection_pools
       end
 
-
       def test_connection_pool_receives_configuration
         test_size = 10
         test_timeout = 0.5
@@ -28,37 +28,32 @@ module Adapters
           config.timeout = test_timeout
         end
 
-        pool = mock_pool
-        ConnectionPool.expects(:new).with(:size => test_size, :timeout => test_timeout).returns(pool)
+        expect(ConnectionPool).to receive(:new).with(:size => test_size, :timeout => test_timeout).and_call_original
 
         create_connection.get '/echo'
       end
 
       def test_connection_from_pool_used
-        connection = mock('connection')
-        response = mock('response')
-        response.stubs(:code)
-        response.stubs(:body)
-        response.stubs(:each_header)
+        connection = double('connection')
         pool = ConnectionPool.new { connection }
-        ConnectionPool.stubs(:new).returns(pool)
+        allow(ConnectionPool).to receive(:new).and_return(pool)
+        response = double('response', :code => 200, :body => "body", :each_header => true)
 
-        connection.expects(:get).returns(response)
+        expect(connection).to receive(:get).and_return(response)
 
         create_connection.get '/echo'
       end
 
       def test_connection_pools_reused
-        pool = mock_pool
-        ConnectionPool.expects(:new).once.returns(pool)
+        expect(ConnectionPool).to receive(:new).once.and_call_original
 
         create_connection.get '/echo'
         create_connection.get '/echo'
       end
 
       def test_one_pool_per_host
-        pool = mock_pool
-        ConnectionPool.expects(:new).twice.returns(pool)
+        expect(ConnectionPool).to receive(:new).twice.and_return(test_pool)
+
         conn = create_connection
         conn.host = 'hello'
         conn.get '/echo'
@@ -68,8 +63,8 @@ module Adapters
       end
 
       def test_one_pool_per_port
-        pool = mock_pool
-        ConnectionPool.expects(:new).twice.returns(pool)
+        expect(ConnectionPool).to receive(:new).twice.and_return(test_pool)
+
         conn = create_connection
         conn.port = 1
         conn.get '/echo'
@@ -79,18 +74,12 @@ module Adapters
       end
 
       def test_keep_alive_header_set
-        pool = mock_pool
-        ConnectionPool.stubs(:new).returns(pool)
-
         response = create_connection.get('echo_header', :name => 'connection')
 
         assert_equal('Keep-Alive', response.body)
       end
 
       def test_keep_alive_header_not_overwritten
-        pool = mock_pool
-        ConnectionPool.stubs(:new).returns(pool)
-
         response = create_connection.get('echo_header', :name => 'connection') do |request|
           request.headers['Connection'] = 'close'
         end
@@ -99,7 +88,7 @@ module Adapters
       end
 
       private
-      def mock_pool
+      def test_pool
         connection = Net::HTTP.new(self.class.live_server.host, self.class.live_server.port)
         pool = ConnectionPool.new { connection }
       end

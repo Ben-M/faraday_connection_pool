@@ -11,7 +11,7 @@ group :test do
   gem 'leftright', '>= 0.9', :require => false
   gem 'mime-types', '~> 1.25', :platforms => [:jruby, :ruby_18]
   gem 'minitest', '>= 5.0.5'
-  gem 'mocha'
+  gem 'minitest-rspec_mocks'
   gem 'rest-client', '~> 1.6.0', :platforms => [:jruby, :ruby_18]
   gem 'simplecov'
   gem 'sinatra', '~> 1.3'
