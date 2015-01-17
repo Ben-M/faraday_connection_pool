@@ -19,17 +19,27 @@ module Adapters
         FaradayConnectionPool::Adapter::NetHttpPooled.purge_connection_pools
       end
 
-      def test_connection_pool_receives_configuration
+      def test_connection_pool_receives_size_and_pool_timeout
         test_size = 10
-        test_timeout = 0.5
+        test_pool_timeout = 0.5
 
         FaradayConnectionPool.configure do |config|
           config.size = test_size
-          config.timeout = test_timeout
+          config.pool_timeout = test_pool_timeout
         end
 
-        expect(ConnectionPool).to receive(:new).with(:size => test_size, :timeout => test_timeout).and_call_original
+        expect(ConnectionPool).to receive(:new).with(:size => test_size, :timeout => test_pool_timeout).and_call_original
 
+        create_connection.get '/echo'
+      end
+
+      def test_connection_created_with_keep_alive_timeout
+        test_keep_alive_timeout = 18
+        FaradayConnectionPool.configure do |config|
+          config.keep_alive_timeout = test_keep_alive_timeout
+        end
+
+        expect_any_instance_of(Net::HTTP).to receive(:keep_alive_timeout=).with(test_keep_alive_timeout)
         create_connection.get '/echo'
       end
 

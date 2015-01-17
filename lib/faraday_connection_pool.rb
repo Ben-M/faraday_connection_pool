@@ -5,15 +5,21 @@ module FaradayConnectionPool
 
   class Configuration
     attr_writer :size
-    attr_writer :timeout
+    attr_writer :pool_timeout
+    attr_writer :keep_alive_timeout
 
     def size
       @size ||= 5
     end
 
-    def timeout
-      @timeout ||= 5
+    def pool_timeout
+      @pool_timeout ||= 5
     end
+
+    def keep_alive_timeout
+      @keep_alive_timeout ||= 30
+    end
+
   end
 
   def self.configure
@@ -50,9 +56,16 @@ module FaradayConnectionPool
       private
       def connection_pool_for(env)
         self.class.synchronize do
+          connection_with_keep_alive_time = -> do
+            connection = net_http_connection(env)
+            connection.keep_alive_timeout = FaradayConnectionPool.configuration.keep_alive_timeout
+            connection
+          end
+
           @@connection_pools[pool_key(env)] ||=
             ConnectionPool.new(:size => FaradayConnectionPool.configuration.size,
-                               :timeout => FaradayConnectionPool.configuration.timeout) { net_http_connection(env) }
+                               :timeout => FaradayConnectionPool.configuration.pool_timeout,
+                               &connection_with_keep_alive_time)
         end
       end
 

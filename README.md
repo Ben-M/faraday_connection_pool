@@ -26,7 +26,8 @@ Or install it yourself as:
 ```ruby
 FaradayConnectionPool.configure do |config|
   config.size = 5 #The number of connections to held in the pool. There is a separate pool for each host/port.
-  config.timeout = 0.5 #If no connection is available from the pool within :timeout seconds the adapter will raise a Timeout::Error.
+  config.pool_timeout = 0.5 #If no connection is available from the pool within :pool_timeout seconds the adapter will raise a Timeout::Error.
+  config.keep_alive_timeout = 15 #The longest a connection should be held open if it is unused.
 end
 ```
 
