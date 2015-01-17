@@ -1,8 +1,7 @@
 # FaradayConnectionPool
 
 FaradayConnectionPool provides a persistent Net::HTTP Faraday adapter.
-Unlike Net::Persistent, connections are pooled across threads and fibres so that they can be reused more frequently.
-
+Unlike Net::HTTP::Persistent, which has a connection-per-thread, connections are pooled across all threads and you will always get the most recently used connection. This should mean that you are more likely to get an existing connection with a reduced chance of getting a connection reset
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -48,7 +47,7 @@ for you:
 Faraday.new do |conn|
   conn.request :retry, max: 2, interval: 0.05,
                        interval_randomness: 0.5, backoff_factor: 2
-                       exceptions: [CustomException, 'Timeout::Error']
+                       exceptions: [ Faraday::Error::ConnectionFailed ]
     conn.adapter :net_http_pooled
 end
 ```
@@ -57,6 +56,11 @@ end
 
 The `:net_http_pooled adapter` will not complain if you configure it to use a proxy server, but this code is entirely
 untested. Use this at your own risk and file an issue to tell us how it goes.
+
+## Tests
+
+Run tests with `script/test`.
+The test framework pulls in files from Faraday to save us setting up an integration test framework here.
 
 ## Contributing
 
@@ -68,5 +72,6 @@ untested. Use this at your own risk and file an issue to tell us how it goes.
 5. Create new Pull Request
 
 ## Todo
+* [ ] Make Faraday::Error::ConnectionFailed less general, so we can retry only Errno::ECONNRESET
 * [ ] Allow host/port specific configuration
 * [ ] Test proxy support
