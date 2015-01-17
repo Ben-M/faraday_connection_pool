@@ -3,9 +3,6 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in faraday_connection_pool.gemspec
 gemspec
 
-gem 'faraday', '>= 0.9.1'
-gem 'connection_pool', '~> 2.1'
-
 group :test do
   gem 'coveralls', :require => false
   gem 'leftright', '>= 0.9', :require => false
