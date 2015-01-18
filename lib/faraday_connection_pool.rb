@@ -56,16 +56,14 @@ module FaradayConnectionPool
       private
       def connection_pool_for(env)
         self.class.synchronize do
-          connection_with_keep_alive_time = -> do
-            connection = net_http_connection(env)
-            connection.keep_alive_timeout = FaradayConnectionPool.configuration.keep_alive_timeout
-            connection
-          end
-
+          keep_alive_timeout = FaradayConnectionPool.configuration.keep_alive_timeout
           @@connection_pools[pool_key(env)] ||=
             ConnectionPool.new(:size => FaradayConnectionPool.configuration.size,
-                               :timeout => FaradayConnectionPool.configuration.pool_timeout,
-                               &connection_with_keep_alive_time)
+                               :timeout => FaradayConnectionPool.configuration.pool_timeout) do
+                                 net_http_connection(env).tap do |connection|
+                                   connection.keep_alive_timeout = keep_alive_timeout
+                                 end
+                               end
         end
       end
 
